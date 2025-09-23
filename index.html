@@ -91,12 +91,13 @@
             margin-bottom: 20px;
         }
 
+        /* AJUSTE AQUI: Tamanho do tabuleiro e layout das cartas */
         .board {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 10px;
             width: 100%;
-            max-width: 800px;
+            max-width: 800px; /* Largura máxima do tabuleiro */
             padding: 10px;
             background-color: #fff;
             border-radius: 8px;
@@ -105,7 +106,7 @@
 
         .card {
             width: 100%;
-            height: 100px;
+            height: 120px; /* Aumento da altura */
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.6s;
@@ -125,11 +126,12 @@
             border: 2px solid #333;
             box-sizing: border-box;
             font-weight: bold;
-            font-size: 1em;
+            font-size: 0.9em; /* Tamanho da fonte ajustado */
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
+            padding: 5px; /* Adicionado padding para melhor visualização */
         }
 
         .card .card-back {
@@ -639,12 +641,11 @@
             }
             const playersRef = collection(db, "jogadores");
             const querySnapshot = await getDocs(playersRef);
-            const batch = db.runTransaction(async (transaction) => {
+            await runTransaction(db, async (transaction) => {
                 querySnapshot.forEach((doc) => {
                     transaction.delete(doc.ref);
                 });
             });
-            await batch;
             alert("Histórico de jogadores apagado com sucesso!");
             adminDataDisplay.innerHTML = "";
             loadScores();
