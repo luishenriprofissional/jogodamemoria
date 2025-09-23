@@ -145,6 +145,7 @@
             color: #333;
         }
         
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -156,7 +157,6 @@
             justify-content: center;
             align-items: center;
             z-index: 10;
-            flex-direction: column;
         }
 
         .modal-content {
@@ -179,41 +179,14 @@
             right: 10px;
         }
 
-        /* Painel Admin */
-        #admin-page {
+        /* Página de Ranking */
+        #ranking-page {
             display: none;
             width: 100%;
             max-width: 800px;
             margin-top: 20px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        #admin-page h2 {
-            text-align: center;
-        }
-        
-        .admin-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .admin-buttons button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #rebootButton {
-            background-color: #dc3545;
-            color: white;
-        }
-        
         /* Pódio */
         .podium-container {
             display: flex;
@@ -268,7 +241,7 @@
             font-size: 0.9em;
         }
         
-        /* Ranking */
+        /* Ranking Completo */
         #scoreboard {
             margin-top: 20px;
             width: 100%;
@@ -323,33 +296,33 @@
                 <h2>Parabéns! Você venceu!</h2>
                 <p>Nick: <span id="playerNickname"></span></p>
                 <p>Tempo: <span id="finalTime"></span></p>
+                <p>Movimentos: <span id="finalMoves"></span></p>
                 <p>Data: <span id="finalDate"></span></p>
                 <button id="saveScoreButton">Salvar Resultado</button>
-                
-                <div id="ranking-container" style="display: none;">
-                    <hr>
-                    <div id="podium-container" class="podium-container">
-                        <div class="podium">
-                            <div class="rank">
-                                <div class="rank-bar second" id="second-place"></div>
-                                <div class="rank-info" id="second-info">🥈</div>
-                            </div>
-                            <div class="rank">
-                                <div class="rank-bar first" id="first-place"></div>
-                                <div class="rank-info" id="first-info">🥇</div>
-                            </div>
-                            <div class="rank">
-                                <div class="rank-bar third" id="third-place"></div>
-                                <div class="rank-info" id="third-info">🥉</div>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+        </div>
 
-                    <div id="scoreboard">
-                        <h2>Todos os Tempos</h2>
-                        <ol id="rank-list"></ol>
+        <div id="ranking-page">
+            <h2>Ranking dos Melhores Tempos</h2>
+            <div id="podium-container" class="podium-container">
+                <div class="podium">
+                    <div class="rank">
+                        <div class="rank-bar second" id="second-place"></div>
+                        <div class="rank-info" id="second-info">🥈</div>
+                    </div>
+                    <div class="rank">
+                        <div class="rank-bar first" id="first-place"></div>
+                        <div class="rank-info" id="first-info">🥇</div>
+                    </div>
+                    <div class="rank">
+                        <div class="rank-bar third" id="third-place"></div>
+                        <div class="rank-info" id="third-info">🥉</div>
                     </div>
                 </div>
+            </div>
+            <div id="scoreboard">
+                <h3>Todos os Tempos</h3>
+                <ol id="rank-list"></ol>
             </div>
         </div>
 
@@ -393,6 +366,7 @@
         
         const startPage = document.getElementById('start-page');
         const gameContent = document.getElementById('game-content');
+        const rankingPage = document.getElementById('ranking-page');
         const nicknameInput = document.getElementById('nicknameInput');
         const startButton = document.getElementById('startButton');
         const playerNicknameSpan = document.getElementById('playerNickname');
@@ -413,7 +387,6 @@
         const showAllPlayersButton = document.getElementById('showAllPlayers');
         const rebootButton = document.getElementById('rebootButton');
         const adminDataDisplay = document.getElementById('admin-data-display');
-        const rankingContainer = document.getElementById('ranking-container');
         const rankList = document.getElementById('rank-list');
         
         // A SENHA DO ADMIN AQUI. TROQUE POR UMA MAIS SEGURA!
@@ -571,9 +544,10 @@
                     data: new Date(),
                     reinicios: restartCount
                 });
-                rankingContainer.style.display = 'block';
+                winnerModal.style.display = 'none';
+                gameContent.style.display = 'none';
+                rankingPage.style.display = 'flex';
                 loadScores();
-                // Não reinicia o jogo automaticamente, apenas exibe o ranking
             } catch (e) {
                 console.error("Erro ao salvar a pontuação: ", e);
                 alert("Erro ao salvar a pontuação.");
@@ -680,6 +654,7 @@
                 adminModal.style.display = 'none';
                 startPage.style.display = 'none';
                 gameContent.style.display = 'none';
+                rankingPage.style.display = 'none';
                 adminPage.style.display = 'block';
             } else {
                 alert("Senha incorreta!");
