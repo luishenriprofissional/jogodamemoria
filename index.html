@@ -145,7 +145,6 @@
             color: #333;
         }
         
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -257,6 +256,41 @@
             padding-left: 20px;
             list-style-position: inside;
         }
+
+        /* Painel Admin */
+        #admin-page {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #admin-page h2 {
+            text-align: center;
+        }
+        
+        .admin-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .admin-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #rebootButton {
+            background-color: #dc3545;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -326,14 +360,6 @@
             </div>
         </div>
 
-        <div id="adminModal" class="modal">
-            <div class="modal-content">
-                <h2>Acesso de Administrador</h2>
-                <input type="password" id="adminPassword" placeholder="Senha">
-                <button id="adminLoginButton">Entrar</button>
-            </div>
-        </div>
-
     </div>
     
     <div class="footer">Feito por: luix.</div>
@@ -381,16 +407,13 @@
         const saveScoreButton = document.getElementById('saveScoreButton');
         const restartButton = document.getElementById('restartButton');
         const adminPage = document.getElementById('admin-page');
-        const adminModal = document.getElementById('adminModal');
-        const adminPasswordInput = document.getElementById('adminPassword');
-        const adminLoginButton = document.getElementById('adminLoginButton');
         const showAllPlayersButton = document.getElementById('showAllPlayers');
         const rebootButton = document.getElementById('rebootButton');
         const adminDataDisplay = document.getElementById('admin-data-display');
         const rankList = document.getElementById('rank-list');
         
         // A SENHA DO ADMIN AQUI. TROQUE POR UMA MAIS SEGURA!
-        const ADMIN_PASSWORD = "admin123";
+        const ADMIN_NICKNAME = "admin123";
 
         let cards = [
             'Cuscuz', 'Cuscuz',
@@ -633,7 +656,13 @@
 
         startButton.addEventListener('click', () => {
             playerName = nicknameInput.value.trim();
-            if (playerName) {
+            if (playerName.toLowerCase() === ADMIN_NICKNAME) {
+                startPage.style.display = 'none';
+                gameContent.style.display = 'none';
+                rankingPage.style.display = 'none';
+                adminPage.style.display = 'block';
+                showAllPlayers(); // Carrega os dados do admin assim que ele faz login
+            } else if (playerName) {
                 startPage.style.display = 'none';
                 gameContent.style.display = 'flex';
                 restartGame();
@@ -642,25 +671,6 @@
 
         saveScoreButton.addEventListener('click', saveScore);
         restartButton.addEventListener('click', restartGame);
-
-        // Acesso ao painel de admin (clique no título "Feito por: luix.")
-        const footer = document.querySelector('.footer');
-        footer.addEventListener('click', () => {
-            adminModal.style.display = 'flex';
-        });
-
-        adminLoginButton.addEventListener('click', () => {
-            if (adminPasswordInput.value === ADMIN_PASSWORD) {
-                adminModal.style.display = 'none';
-                startPage.style.display = 'none';
-                gameContent.style.display = 'none';
-                rankingPage.style.display = 'none';
-                adminPage.style.display = 'block';
-            } else {
-                alert("Senha incorreta!");
-            }
-        });
-
         showAllPlayersButton.addEventListener('click', showAllPlayers);
         rebootButton.addEventListener('click', rebootDatabase);
 
