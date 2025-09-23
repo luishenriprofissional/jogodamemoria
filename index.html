@@ -91,13 +91,13 @@
             margin-bottom: 20px;
         }
 
-        /* AJUSTE AQUI: Tamanho do tabuleiro e layout das cartas */
+        /* Ajustes no tabuleiro e cartas */
         .board {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 10px;
             width: 100%;
-            max-width: 800px; /* Largura máxima do tabuleiro */
+            max-width: 800px;
             padding: 10px;
             background-color: #fff;
             border-radius: 8px;
@@ -106,7 +106,7 @@
 
         .card {
             width: 100%;
-            height: 120px; /* Aumento da altura */
+            height: 120px;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.6s;
@@ -126,12 +126,12 @@
             border: 2px solid #333;
             box-sizing: border-box;
             font-weight: bold;
-            font-size: 0.9em; /* Tamanho da fonte ajustado */
+            font-size: 0.9em;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 5px; /* Adicionado padding para melhor visualização */
+            padding: 5px;
         }
 
         .card .card-back {
@@ -145,25 +145,6 @@
             color: #333;
         }
         
-        #scoreboard {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 800px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        #scoreboard h2 {
-            margin-top: 0;
-            text-align: center;
-        }
-
-        #scoreboard ol {
-            padding-left: 20px;
-        }
-
         .modal {
             display: none;
             position: fixed;
@@ -175,6 +156,7 @@
             justify-content: center;
             align-items: center;
             z-index: 10;
+            flex-direction: column;
         }
 
         .modal-content {
@@ -183,6 +165,8 @@
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
         }
         
         .restart-button {
@@ -283,6 +267,23 @@
             margin-top: 5px;
             font-size: 0.9em;
         }
+        
+        /* Ranking */
+        #scoreboard {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        #scoreboard ol {
+            padding-left: 20px;
+            list-style-position: inside;
+        }
     </style>
 </head>
 <body>
@@ -306,28 +307,6 @@
             </div>
             <div class="board"></div>
             <button class="restart-button" id="restartButton">🔄</button>
-
-            <div id="podium-container" class="podium-container">
-                <div class="podium">
-                    <div class="rank">
-                        <div class="rank-bar second" id="second-place"></div>
-                        <div class="rank-info" id="second-info">🥈</div>
-                    </div>
-                    <div class="rank">
-                        <div class="rank-bar first" id="first-place"></div>
-                        <div class="rank-info" id="first-info">🥇</div>
-                    </div>
-                    <div class="rank">
-                        <div class="rank-bar third" id="third-place"></div>
-                        <div class="rank-info" id="third-info">🥉</div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="scoreboard">
-                <h2>Todos os Tempos</h2>
-                <ol id="rank-list"></ol>
-            </div>
         </div>
 
         <div id="admin-page">
@@ -345,7 +324,32 @@
                 <p>Nick: <span id="playerNickname"></span></p>
                 <p>Tempo: <span id="finalTime"></span></p>
                 <p>Data: <span id="finalDate"></span></p>
-                <button id="saveScoreButton">Salvar e Voltar</button>
+                <button id="saveScoreButton">Salvar Resultado</button>
+                
+                <div id="ranking-container" style="display: none;">
+                    <hr>
+                    <div id="podium-container" class="podium-container">
+                        <div class="podium">
+                            <div class="rank">
+                                <div class="rank-bar second" id="second-place"></div>
+                                <div class="rank-info" id="second-info">🥈</div>
+                            </div>
+                            <div class="rank">
+                                <div class="rank-bar first" id="first-place"></div>
+                                <div class="rank-info" id="first-info">🥇</div>
+                            </div>
+                            <div class="rank">
+                                <div class="rank-bar third" id="third-place"></div>
+                                <div class="rank-info" id="third-info">🥉</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="scoreboard">
+                        <h2>Todos os Tempos</h2>
+                        <ol id="rank-list"></ol>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -396,7 +400,6 @@
         const movesSpan = document.getElementById('moves');
         const matchedPairsSpan = document.getElementById('matched-pairs');
         const timerSpan = document.getElementById('timer');
-        const rankList = document.getElementById('rank-list');
         const winnerModal = document.getElementById('winnerModal');
         const finalMovesSpan = document.getElementById('finalMoves');
         const finalTimeSpan = document.getElementById('finalTime');
@@ -410,6 +413,8 @@
         const showAllPlayersButton = document.getElementById('showAllPlayers');
         const rebootButton = document.getElementById('rebootButton');
         const adminDataDisplay = document.getElementById('admin-data-display');
+        const rankingContainer = document.getElementById('ranking-container');
+        const rankList = document.getElementById('rank-list');
         
         // A SENHA DO ADMIN AQUI. TROQUE POR UMA MAIS SEGURA!
         const ADMIN_PASSWORD = "admin123";
@@ -433,7 +438,6 @@
         let moves = 0;
         let matchedPairs = 0;
         let restartCount = 0;
-        let totalGamesPlayed = 0;
 
         // --- Funções de Lógica do Jogo ---
         function shuffle(array) {
@@ -565,13 +569,9 @@
                     data: new Date(),
                     reinicios: restartCount
                 });
-                winnerModal.style.display = 'none';
-                startPage.style.display = 'flex';
-                gameContent.style.display = 'none';
+                rankingContainer.style.display = 'block';
                 loadScores();
-                restartCount = 0;
-                totalGamesPlayed = 0;
-                nicknameInput.value = '';
+                // Não reinicia o jogo automaticamente, apenas exibe o ranking
             } catch (e) {
                 console.error("Erro ao salvar a pontuação: ", e);
                 alert("Erro ao salvar a pontuação.");
@@ -648,7 +648,6 @@
             });
             alert("Histórico de jogadores apagado com sucesso!");
             adminDataDisplay.innerHTML = "";
-            loadScores();
         }
 
         // --- Event Listeners ---
@@ -688,8 +687,6 @@
         showAllPlayersButton.addEventListener('click', showAllPlayers);
         rebootButton.addEventListener('click', rebootDatabase);
 
-        // Inicializa o ranking ao carregar a página
-        loadScores();
     </script>
 </body>
 </html>
