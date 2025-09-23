@@ -544,9 +544,10 @@
             playerNicknameSpan.textContent = playerName;
             winnerModal.style.display = 'flex';
         }
-
+        
         function restartGame() {
-            restartCount++;
+            // Reinicia a contagem de reinícios apenas no início de um novo jogo
+            restartCount = 0; 
             stopTimer();
             moves = 0;
             matchedPairs = 0;
