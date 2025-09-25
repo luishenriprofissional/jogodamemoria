@@ -300,10 +300,12 @@
                 <button id="startButton" disabled>Começar</button>
             </div>
             
-            <div id="existing-player-options" style="display: none; margin-top: 20px;">
+            <div id="existing-player-options" style="display: none; margin-top: 20px; flex-direction: column; align-items: center;">
                 <p>Olá, <strong id="existingPlayerName"></strong>! O que você gostaria de fazer?</p>
-                <button id="showHistoryButton" style="margin-right: 10px;">Ver Histórico</button>
-                <button id="newGameButton">Iniciar Novo Jogo</button>
+                <div>
+                    <button id="showHistoryButton" style="margin-right: 10px;">Ver Histórico</button>
+                    <button id="newGameButton">Iniciar Novo Jogo</button>
+                </div>
             </div>
         </div>
 
@@ -596,7 +598,11 @@
             const q = query(playersRef, where("nome", "==", nick), orderBy("data", "desc"));
             const querySnapshot = await getDocs(q);
             
-            return querySnapshot.docs.map(doc => doc.data());
+            const history = [];
+            querySnapshot.forEach(doc => {
+                history.push(doc.data());
+            });
+            return history;
         }
 
         async function showPlayerHistory(history) {
@@ -712,22 +718,25 @@
         nicknameInput.addEventListener('input', () => {
             const nickname = nicknameInput.value.trim();
             startButton.disabled = nickname === '';
-            // Reseta a visibilidade ao digitar
+            // Reseta a visibilidade
             existingPlayerOptions.style.display = 'none';
             startButton.style.display = 'block';
+            nicknameInput.style.display = 'block';
         });
 
         startButton.addEventListener('click', async () => {
             playerName = nicknameInput.value.trim();
+            if (!playerName) return; // Evita ação se o campo estiver vazio
+
             if (playerName.toLowerCase() === ADMIN_NICKNAME) {
                 startPage.style.display = 'none';
                 adminPage.style.display = 'block';
                 showAllPlayers();
-            } else if (playerName) {
+            } else {
                 const history = await checkPlayerHistory(playerName);
                 if (history.length > 0) {
                     existingPlayerNameSpan.textContent = playerName;
-                    existingPlayerOptions.style.display = 'block';
+                    existingPlayerOptions.style.display = 'flex';
                     startButton.style.display = 'none';
                     nicknameInput.style.display = 'none';
                 } else {
