@@ -777,30 +777,29 @@
         }
 
         async function showUserHistory() {
+            // Limpa o conteúdo da lista antes de adicionar novos itens
             historyList.innerHTML = '';
+            
+            // Exibe o painel de histórico
             historyNicknameSpan.textContent = playerName;
             userHistoryContent.style.display = 'block';
 
+            // Busca todos os documentos do usuário, ordenando por data
             const playersRef = collection(db, "jogadores");
-            const q = query(playersRef, where("nome", "==", playerName), orderBy("tempo"));
+            const q = query(playersRef, where("nome", "==", playerName), orderBy("data"));
             const querySnapshot = await getDocs(q);
             
-            let userScores = [];
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                userScores.push({ id: doc.id, ...data });
-            });
-
-            // Encontra o melhor tempo
-            let bestScore = null;
-            if (userScores.length > 0) {
-                bestScore = userScores.reduce((prev, current) => {
-                    return (prev.tempo < current.tempo) ? prev : current;
-                }, userScores[0]);
+            // Se não houver histórico, mostra uma mensagem
+            if (querySnapshot.empty) {
+                historyList.innerHTML = '<li>Nenhum histórico encontrado para este usuário.</li>';
+                return;
             }
-            
-            userScores.forEach(score => {
+
+            // Itera sobre cada documento e cria um item de lista
+            querySnapshot.forEach(doc => {
+                const score = doc.data();
                 const li = document.createElement('li');
+
                 const minutes = Math.floor(score.tempo / 60);
                 const remainingSeconds = score.tempo % 60;
                 const formattedTime = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
@@ -816,12 +815,7 @@
                     second: '2-digit'
                 });
                 
-                li.textContent = `Tempo: ${formattedTime}s | Movimentos: ${score.pontuacao} | Reinicios: ${score.reinicios ? score.reinicios : 0} | Data: ${formattedDate}`;
-                
-                if (bestScore && score.id === bestScore.id) {
-                    li.classList.add('best-score');
-                    li.textContent += " (Melhor Tempo! 🏆)";
-                }
+                li.textContent = `Nick: ${score.nome}, Tempo: ${formattedTime}s, Reinicios: ${score.reinicios}, Movimentos: ${score.pontuacao}, Data: ${formattedDate}`;
                 
                 historyList.appendChild(li);
             });
