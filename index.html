@@ -784,14 +784,23 @@
             const playersRef = collection(db, "jogadores");
             const q = query(playersRef, where("nome", "==", playerName));
             const querySnapshot = await getDocs(q);
-
+            
             if (querySnapshot.empty) {
                 historyList.innerHTML = '<li>Nenhum histórico encontrado para este usuário.</li>';
                 return;
             }
 
+            let userScores = [];
             querySnapshot.forEach(doc => {
-                const score = doc.data();
+                userScores.push({ id: doc.id, ...doc.data() });
+            });
+            
+            // Encontra o melhor tempo, que é o menor valor no campo 'tempo'
+            let bestScore = userScores.reduce((prev, current) => {
+                return (prev.tempo < current.tempo) ? prev : current;
+            });
+            
+            userScores.forEach(score => {
                 const li = document.createElement('li');
 
                 const minutes = Math.floor(score.tempo / 60);
@@ -808,7 +817,13 @@
                     second: '2-digit'
                 });
                 
-                li.textContent = `Nick: ${score.nome}, Tempo: ${formattedTime}s, Reinicios: ${score.reinicios}, Movimentos: ${score.pontuacao}, Data: ${formattedDate}`;
+                li.textContent = `Tempo: ${formattedTime}s | Movimentos: ${score.pontuacao} | Reinicios: ${score.reinicios} | Data: ${formattedDate}`;
+                
+                // Adiciona o emoji e a classe se for o melhor tempo
+                if (score.id === bestScore.id) {
+                    li.classList.add('best-score');
+                    li.textContent += " 🏆";
+                }
                 
                 historyList.appendChild(li);
             });
