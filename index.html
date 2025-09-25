@@ -792,9 +792,12 @@
             });
 
             // Encontra o melhor tempo
-            const bestScore = userScores.reduce((prev, current) => {
-                return (prev.tempo < current.tempo) ? prev : current;
-            }, userScores[0]);
+            let bestScore = null;
+            if (userScores.length > 0) {
+                bestScore = userScores.reduce((prev, current) => {
+                    return (prev.tempo < current.tempo) ? prev : current;
+                }, userScores[0]);
+            }
             
             userScores.forEach(score => {
                 const li = document.createElement('li');
@@ -802,9 +805,20 @@
                 const remainingSeconds = score.tempo % 60;
                 const formattedTime = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
                 
-                li.textContent = `Tempo: ${formattedTime}s | Movimentos: ${score.pontuacao} | Reinicios: ${score.reinicios ? score.reinicios : 0} | Data: ${score.data.toDate().toLocaleString()}`;
+                // Formatação da data para o formato dd/mm/yyyy hh:mm:ss
+                const date = score.data.toDate();
+                const formattedDate = date.toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
                 
-                if (score.id === bestScore.id) {
+                li.textContent = `Tempo: ${formattedTime}s | Movimentos: ${score.pontuacao} | Reinicios: ${score.reinicios ? score.reinicios : 0} | Data: ${formattedDate}`;
+                
+                if (bestScore && score.id === bestScore.id) {
                     li.classList.add('best-score');
                     li.textContent += " (Melhor Tempo! 🏆)";
                 }
