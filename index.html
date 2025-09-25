@@ -710,9 +710,11 @@
 
         // --- Event Listeners ---
         nicknameInput.addEventListener('input', () => {
-            startButton.disabled = nicknameInput.value.trim() === '';
+            const nickname = nicknameInput.value.trim();
+            startButton.disabled = nickname === '';
+            // Reseta a visibilidade ao digitar, para evitar bug de display
             existingPlayerOptions.style.display = 'none';
-            startButton.style.display = 'block'; // Garante que o botão 'Começar' esteja visível
+            startButton.style.display = 'block';
         });
 
         startButton.addEventListener('click', async () => {
@@ -725,7 +727,7 @@
                 const history = await checkPlayerHistory(playerName);
                 if (history.length > 0) {
                     existingPlayerNameSpan.textContent = playerName;
-                    existingPlayerOptions.style.display = 'block';
+                    existingPlayerOptions.style.display = 'flex'; // Usado para alinhar botões
                     startButton.style.display = 'none';
                 } else {
                     startPage.style.display = 'none';
