@@ -712,6 +712,7 @@
         nicknameInput.addEventListener('input', () => {
             startButton.disabled = nicknameInput.value.trim() === '';
             existingPlayerOptions.style.display = 'none';
+            startButton.style.display = 'block'; // Garante que o botão 'Começar' esteja visível
         });
 
         startButton.addEventListener('click', async () => {
