@@ -775,27 +775,21 @@
                 restartGame();
             }
         }
-
+        
         async function showUserHistory() {
-            // Limpa o conteúdo da lista antes de adicionar novos itens
             historyList.innerHTML = '';
-            
-            // Exibe o painel de histórico
             historyNicknameSpan.textContent = playerName;
             userHistoryContent.style.display = 'block';
 
-            // Busca todos os documentos do usuário, ordenando por data
             const playersRef = collection(db, "jogadores");
-            const q = query(playersRef, where("nome", "==", playerName), orderBy("data"));
+            const q = query(playersRef, where("nome", "==", playerName));
             const querySnapshot = await getDocs(q);
-            
-            // Se não houver histórico, mostra uma mensagem
+
             if (querySnapshot.empty) {
                 historyList.innerHTML = '<li>Nenhum histórico encontrado para este usuário.</li>';
                 return;
             }
 
-            // Itera sobre cada documento e cria um item de lista
             querySnapshot.forEach(doc => {
                 const score = doc.data();
                 const li = document.createElement('li');
@@ -804,7 +798,6 @@
                 const remainingSeconds = score.tempo % 60;
                 const formattedTime = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
                 
-                // Formatação da data para o formato dd/mm/yyyy hh:mm:ss
                 const date = score.data.toDate();
                 const formattedDate = date.toLocaleString('pt-BR', {
                     day: '2-digit',
@@ -820,7 +813,7 @@
                 historyList.appendChild(li);
             });
         }
-        
+
         function hidePanelsAndStartGame() {
             userPanel.style.display = 'none';
             startPage.style.display = 'none';
