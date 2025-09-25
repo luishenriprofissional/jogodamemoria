@@ -415,7 +415,7 @@
         // A SENHA DO ADMIN AQUI. TROQUE POR UMA MAIS SEGURA!
         const ADMIN_NICKNAME = "admin123";
 
-        let cards = [
+        const cardValues = [
             'Cuscuz', 'Cuscuz',
             'Bolo de Rolo', 'Bolo de Rolo',
             'Canja', 'Canja',
@@ -446,12 +446,11 @@
         }
 
         function createBoard() {
-            shuffle(cards);
+            shuffle(cardValues);
             board.innerHTML = '';
-            cards.forEach(cardValue => {
+            cardValues.forEach(cardValue => {
                 const card = document.createElement('div');
                 card.classList.add('card');
-                // O valor é armazenado no `dataset` para ser acessado apenas via JS
                 card.dataset.value = cardValue;
                 card.innerHTML = `
                     <div class="card-face card-back">?</div>
@@ -489,7 +488,7 @@
                 startTimer();
             }
 
-            // Exibe a palavra ao virar a carta
+            // AQUI ESTÁ A CORREÇÃO: a palavra só é inserida ao virar a carta.
             this.querySelector('.card-front').textContent = this.dataset.value;
             this.classList.add('is-flipped');
 
@@ -520,7 +519,7 @@
 
             resetBoard();
 
-            if (matchedPairs === cards.length / 2) {
+            if (matchedPairs === cardValues.length / 2) {
                 stopTimer();
                 showWinnerModal();
             }
@@ -531,9 +530,11 @@
             setTimeout(() => {
                 firstCard.classList.remove('is-flipped');
                 secondCard.classList.remove('is-flipped');
+                
                 // Oculta as palavras ao desvirar as cartas
                 firstCard.querySelector('.card-front').textContent = '';
                 secondCard.querySelector('.card-front').textContent = '';
+                
                 resetBoard();
             }, 1000);
         }
