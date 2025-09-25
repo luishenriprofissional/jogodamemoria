@@ -488,7 +488,7 @@
                 startTimer();
             }
 
-            // AQUI ESTÁ A CORREÇÃO: a palavra só é inserida ao virar a carta.
+            // CORREÇÃO: Colocando o valor da carta na face da frente somente ao virá-la
             this.querySelector('.card-front').textContent = this.dataset.value;
             this.classList.add('is-flipped');
 
@@ -531,7 +531,7 @@
                 firstCard.classList.remove('is-flipped');
                 secondCard.classList.remove('is-flipped');
                 
-                // Oculta as palavras ao desvirar as cartas
+                // CORREÇÃO: Limpando o conteúdo ao desvirar
                 firstCard.querySelector('.card-front').textContent = '';
                 secondCard.querySelector('.card-front').textContent = '';
                 
