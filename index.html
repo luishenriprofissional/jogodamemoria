@@ -178,15 +178,46 @@
             right: 10px;
         }
 
-        /* Página de Ranking */
-        #ranking-page {
+        /* Páginas de Conteúdo */
+        #ranking-page, #admin-page, #player-history {
             display: none;
             width: 100%;
             max-width: 800px;
             margin-top: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        /* Pódio */
+        .history-content {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .last-score, .all-scores {
+            flex: 1;
+            padding: 15px;
+            margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .all-scores ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .all-scores li {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* Pódio e Ranking */
         .podium-container {
             display: flex;
             justify-content: center;
@@ -240,7 +271,6 @@
             font-size: 0.9em;
         }
         
-        /* Ranking Completo */
         #scoreboard {
             margin-top: 20px;
             width: 100%;
@@ -256,41 +286,6 @@
             padding-left: 20px;
             list-style-position: inside;
         }
-
-        /* Painel Admin */
-        #admin-page {
-            display: none;
-            width: 100%;
-            max-width: 800px;
-            margin-top: 20px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        #admin-page h2 {
-            text-align: center;
-        }
-        
-        .admin-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .admin-buttons button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #rebootButton {
-            background-color: #dc3545;
-            color: white;
-        }
     </style>
 </head>
 <body>
@@ -304,6 +299,12 @@
                 <input type="text" id="nicknameInput" placeholder="Digite seu Nickname">
                 <button id="startButton" disabled>Começar</button>
             </div>
+            
+            <div id="existing-player-options" style="display: none; margin-top: 20px;">
+                <p>Olá, <strong id="existingPlayerName"></strong>! O que você gostaria de fazer?</p>
+                <button id="showHistoryButton" style="margin-right: 10px;">Ver Histórico</button>
+                <button id="newGameButton">Iniciar Novo Jogo</button>
+            </div>
         </div>
 
         <div id="game-content">
@@ -314,6 +315,24 @@
             </div>
             <div class="board"></div>
             <button class="restart-button" id="restartButton">🔄</button>
+        </div>
+
+        <div id="player-history">
+            <h2>Seu Histórico de Jogos</h2>
+            <div class="history-content">
+                <div class="last-score">
+                    <h3>Último Jogo</h3>
+                    <p>Nick: <span id="lastScoreNick"></span></p>
+                    <p>Tempo: <span id="lastScoreTime"></span></p>
+                    <p>Movimentos: <span id="lastScoreMoves"></span></p>
+                    <p>Data: <span id="lastScoreDate"></span></p>
+                </div>
+                <div class="all-scores">
+                    <h3>Todos os Tempos</h3>
+                    <ul id="history-list"></ul>
+                </div>
+            </div>
+            <button id="backToMainButton" style="margin-top: 20px;">Voltar para o Início</button>
         </div>
 
         <div id="admin-page">
@@ -366,7 +385,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, orderBy, getDocs, deleteDoc, doc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // Cole a configuração do seu Firebase AQUI
         const firebaseConfig = {
@@ -393,8 +412,14 @@
         const startPage = document.getElementById('start-page');
         const gameContent = document.getElementById('game-content');
         const rankingPage = document.getElementById('ranking-page');
+        const playerHistoryPage = document.getElementById('player-history');
         const nicknameInput = document.getElementById('nicknameInput');
         const startButton = document.getElementById('startButton');
+        const existingPlayerOptions = document.getElementById('existing-player-options');
+        const existingPlayerNameSpan = document.getElementById('existingPlayerName');
+        const showHistoryButton = document.getElementById('showHistoryButton');
+        const newGameButton = document.getElementById('newGameButton');
+        const backToMainButton = document.getElementById('backToMainButton');
         const playerNicknameSpan = document.getElementById('playerNickname');
         const board = document.querySelector('.board');
         const movesSpan = document.getElementById('moves');
@@ -411,8 +436,13 @@
         const rebootButton = document.getElementById('rebootButton');
         const adminDataDisplay = document.getElementById('admin-data-display');
         const rankList = document.getElementById('rank-list');
+        const lastScoreNickSpan = document.getElementById('lastScoreNick');
+        const lastScoreTimeSpan = document.getElementById('lastScoreTime');
+        const lastScoreMovesSpan = document.getElementById('lastScoreMoves');
+        const lastScoreDateSpan = document.getElementById('lastScoreDate');
+        const historyListUl = document.getElementById('history-list');
+
         
-        // A SENHA DO ADMIN AQUI. TROQUE POR UMA MAIS SEGURA!
         const ADMIN_NICKNAME = "admin123";
 
         let cards = [
@@ -451,7 +481,6 @@
             cards.forEach(cardValue => {
                 const card = document.createElement('div');
                 card.classList.add('card');
-                // O valor é armazenado no `dataset` para ser acessado apenas via JS
                 card.dataset.value = cardValue;
                 card.innerHTML = `
                     <div class="card-face card-back">?</div>
@@ -489,7 +518,6 @@
                 startTimer();
             }
 
-            // Exibe a palavra ao virar a carta
             this.querySelector('.card-front').textContent = this.dataset.value;
             this.classList.add('is-flipped');
 
@@ -531,7 +559,6 @@
             setTimeout(() => {
                 firstCard.classList.remove('is-flipped');
                 secondCard.classList.remove('is-flipped');
-                // Oculta as palavras ao desvirar as cartas
                 firstCard.querySelector('.card-front').textContent = '';
                 secondCard.querySelector('.card-front').textContent = '';
                 resetBoard();
@@ -552,7 +579,7 @@
         }
         
         function restartGame() {
-            restartCount++;
+            restartCount = 0; 
             stopTimer();
             moves = 0;
             matchedPairs = 0;
@@ -563,7 +590,35 @@
             createBoard();
         }
 
-        // --- Interação com o Banco de Dados (Firebase) ---
+        // --- Funções de Histórico e Banco de Dados (Firebase) ---
+        async function checkPlayerHistory(nick) {
+            const playersRef = collection(db, "jogadores");
+            const q = query(playersRef, where("nome", "==", nick), orderBy("data", "desc"));
+            const querySnapshot = await getDocs(q);
+            
+            return querySnapshot.docs.map(doc => doc.data());
+        }
+
+        async function showPlayerHistory(history) {
+            startPage.style.display = 'none';
+            playerHistoryPage.style.display = 'block';
+
+            const lastScore = history[0];
+            lastScoreNickSpan.textContent = lastScore.nome;
+            lastScoreTimeSpan.textContent = `${Math.floor(lastScore.tempo / 60)}m ${lastScore.tempo % 60}s`;
+            lastScoreMovesSpan.textContent = lastScore.pontuacao;
+            lastScoreDateSpan.textContent = lastScore.data.toDate().toLocaleString();
+
+            historyListUl.innerHTML = '';
+            history.forEach(score => {
+                const li = document.createElement('li');
+                const minutes = Math.floor(score.tempo / 60);
+                const remainingSeconds = score.tempo % 60;
+                li.textContent = `${minutes}m ${remainingSeconds}s (${score.pontuacao} movimentos) - ${score.data.toDate().toLocaleString()}`;
+                historyListUl.appendChild(li);
+            });
+        }
+
         async function saveScore() {
             try {
                 await addDoc(collection(db, "jogadores"), {
@@ -595,7 +650,6 @@
                 scores.push(data);
             });
 
-            // Ordena os dados e preenche o pódio
             scores.sort((a, b) => a.tempo - b.tempo);
             if (scores.length >= 1) {
                 document.getElementById('first-info').textContent = `${scores[0].nome} (${scores[0].tempo}s)`;
@@ -613,7 +667,6 @@
                 document.getElementById('third-info').textContent = "🥉";
             }
 
-            // Preenche a lista completa
             scores.forEach(data => {
                 const li = document.createElement('li');
                 const minutes = Math.floor(data.tempo / 60);
@@ -658,21 +711,48 @@
         // --- Event Listeners ---
         nicknameInput.addEventListener('input', () => {
             startButton.disabled = nicknameInput.value.trim() === '';
+            existingPlayerOptions.style.display = 'none';
         });
 
-        startButton.addEventListener('click', () => {
+        startButton.addEventListener('click', async () => {
             playerName = nicknameInput.value.trim();
             if (playerName.toLowerCase() === ADMIN_NICKNAME) {
                 startPage.style.display = 'none';
-                gameContent.style.display = 'none';
-                rankingPage.style.display = 'none';
                 adminPage.style.display = 'block';
                 showAllPlayers();
             } else if (playerName) {
-                startPage.style.display = 'none';
-                gameContent.style.display = 'flex';
-                restartGame();
+                const history = await checkPlayerHistory(playerName);
+                if (history.length > 0) {
+                    existingPlayerNameSpan.textContent = playerName;
+                    existingPlayerOptions.style.display = 'block';
+                    startButton.style.display = 'none';
+                } else {
+                    startPage.style.display = 'none';
+                    gameContent.style.display = 'flex';
+                    restartGame();
+                }
             }
+        });
+
+        showHistoryButton.addEventListener('click', async () => {
+            const history = await checkPlayerHistory(playerName);
+            if (history.length > 0) {
+                showPlayerHistory(history);
+            }
+        });
+
+        newGameButton.addEventListener('click', () => {
+            startPage.style.display = 'none';
+            gameContent.style.display = 'flex';
+            restartGame();
+        });
+
+        backToMainButton.addEventListener('click', () => {
+            playerHistoryPage.style.display = 'none';
+            startPage.style.display = 'flex';
+            nicknameInput.value = '';
+            startButton.style.display = 'block';
+            existingPlayerOptions.style.display = 'none';
         });
 
         saveScoreButton.addEventListener('click', saveScore);
