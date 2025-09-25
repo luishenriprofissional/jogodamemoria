@@ -785,32 +785,28 @@
             const q = query(playersRef, where("nome", "==", playerName), orderBy("tempo"));
             const querySnapshot = await getDocs(q);
             
-            let bestTime = Infinity;
-            let bestTimeDocId = null;
-
+            let userScores = [];
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                if (data.tempo < bestTime) {
-                    bestTime = data.tempo;
-                    bestTimeDocId = doc.id;
-                }
+                userScores.push({ id: doc.id, ...data });
             });
 
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
+            // Encontra o melhor tempo
+            const bestScore = userScores.reduce((prev, current) => {
+                return (prev.tempo < current.tempo) ? prev : current;
+            }, userScores[0]);
+            
+            userScores.forEach(score => {
                 const li = document.createElement('li');
-                const minutes = Math.floor(data.tempo / 60);
-                const remainingSeconds = data.tempo % 60;
+                const minutes = Math.floor(score.tempo / 60);
+                const remainingSeconds = score.tempo % 60;
                 const formattedTime = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
                 
-                let reloadsText = `Recarregou: ${data.reinicios ? data.reinicios : 0} vezes`;
-                let dateText = `Data: ${data.data.toDate().toLocaleString()}`;
+                li.textContent = `Tempo: ${formattedTime}s | Movimentos: ${score.pontuacao} | Reinicios: ${score.reinicios ? score.reinicios : 0} | Data: ${score.data.toDate().toLocaleString()}`;
                 
-                li.textContent = `Tempo: ${formattedTime} | Movimentos: ${data.pontuacao} | ${reloadsText} | ${dateText}`;
-                
-                if (doc.id === bestTimeDocId) {
+                if (score.id === bestScore.id) {
                     li.classList.add('best-score');
-                    li.textContent += " (Seu melhor tempo! 🏆)";
+                    li.textContent += " (Melhor Tempo! 🏆)";
                 }
                 
                 historyList.appendChild(li);
