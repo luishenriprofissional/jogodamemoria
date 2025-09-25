@@ -14,7 +14,84 @@
             margin: 0;
             padding: 20px;
         }
-        h1 { color: #333; text-align: center; }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Página inicial */
+        #start-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 40px 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #start-page h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        #start-page input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+            font-size: 1em;
+        }
+
+        #start-page button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            color: #fff;
+            background-color: #aaa; /* Cor padrão */
+        }
+
+        #start-page button:enabled {
+            background-color: #28a745; /* Verde quando ativado */
+        }
+
+        /* Rodapé */
+        .footer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        /* Conteúdo do Jogo */
+        #game-content {
+            display: none; /* Inicia oculto */
+            width: 100%;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        /* Ajustes no tabuleiro e cartas */
         .board {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
@@ -26,6 +103,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+
         .card {
             width: 100%;
             aspect-ratio: 1 / 1;
@@ -34,9 +112,11 @@
             transition: transform 0.6s;
             cursor: pointer;
         }
+
         .card.is-flipped {
             transform: rotateY(180deg);
         }
+
         .card .card-face {
             position: absolute;
             width: 100%;
@@ -44,41 +124,320 @@
             backface-visibility: hidden;
             border-radius: 6px;
             border: 2px solid #333;
+            box-sizing: border-box;
+            font-weight: bold;
+            font-size: 0.9em;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 0.9em;
+            text-align: center;
+            padding: 5px;
         }
+
         .card .card-back {
             background-color: #6a0dad;
             color: #fff;
         }
+
         .card .card-front {
             background-color: #e6e6fa;
             transform: rotateY(180deg);
             color: #333;
         }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+        }
+        
+        .restart-button {
+            background-color: #fff;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+        }
+
+        /* Página de Ranking */
+        #ranking-page {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+
+        /* Pódio */
+        .podium-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .podium {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            width: 100%;
+            max-width: 600px;
+            height: 200px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .rank {
+            text-align: center;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .rank-bar {
+            background-color: gold;
+            width: 60px;
+            transition: height 0.5s ease-in-out;
+        }
+
+        .rank-bar.second {
+            background-color: silver;
+            height: 120px;
+        }
+
+        .rank-bar.first {
+            background-color: #c9b037;
+            height: 150px;
+        }
+
+        .rank-bar.third {
+            background-color: #cd7f32;
+            height: 90px;
+        }
+
+        .rank-info {
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        
+        /* Ranking Completo */
+        #scoreboard {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        #scoreboard ol {
+            padding-left: 20px;
+            list-style-position: inside;
+        }
+
+        /* Painel Admin */
+        #admin-page {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #admin-page h2 {
+            text-align: center;
+        }
+        
+        .admin-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .admin-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #rebootButton {
+            background-color: #dc3545;
+            color: white;
+        }
     </style>
 </head>
 <body>
-    <h1>Jogo da Memória</h1>
-    <div class="board"></div>
 
-    <script>
+    <div class="container">
+        <h1>ATIVIDADE SEMANAL DO RESTAURANTE: JOGO DA MEMÓRIA</h1>
+
+        <div id="start-page">
+            <h2>Bem-vindo(a)!</h2>
+            <div>
+                <input type="text" id="nicknameInput" placeholder="Digite seu Nickname">
+                <button id="startButton" disabled>Começar</button>
+            </div>
+        </div>
+
+        <div id="game-content">
+            <div class="game-info">
+                <div>Movimentos: <span id="moves">0</span></div>
+                <div>Pares Encontrados: <span id="matched-pairs">0</span>/12</div>
+                <div>Tempo: <span id="timer">00:00</span></div>
+            </div>
+            <div class="board"></div>
+            <button class="restart-button" id="restartButton">🔄</button>
+        </div>
+
+        <div id="admin-page">
+            <h2>Painel de Administração</h2>
+            <div class="admin-buttons">
+                <button id="showAllPlayers">Ver Jogadores</button>
+                <button id="rebootButton">Reboot (Apagar Tudo)</button>
+            </div>
+            <div id="admin-data-display" style="margin-top: 20px; max-height: 400px; overflow-y: auto;"></div>
+        </div>
+        
+        <div id="winnerModal" class="modal">
+            <div class="modal-content">
+                <h2>Parabéns! Você venceu!</h2>
+                <p>Nick: <span id="playerNickname"></span></p>
+                <p>Tempo: <span id="finalTime"></span></p>
+                <p>Movimentos: <span id="finalMoves"></span></p>
+                <p>Data: <span id="finalDate"></span></p>
+                <button id="saveScoreButton">Salvar Resultado</button>
+            </div>
+        </div>
+
+        <div id="ranking-page">
+            <h2>Ranking dos Melhores Tempos</h2>
+            <div id="podium-container" class="podium-container">
+                <div class="podium">
+                    <div class="rank">
+                        <div class="rank-bar second" id="second-place"></div>
+                        <div class="rank-info" id="second-info">🥈</div>
+                    </div>
+                    <div class="rank">
+                        <div class="rank-bar first" id="first-place"></div>
+                        <div class="rank-info" id="first-info">🥇</div>
+                    </div>
+                    <div class="rank">
+                        <div class="rank-bar third" id="third-place"></div>
+                        <div class="rank-info" id="third-info">🥉</div>
+                    </div>
+                </div>
+            </div>
+            <div id="scoreboard">
+                <h3>Todos os Tempos</h3>
+                <ol id="rank-list"></ol>
+            </div>
+        </div>
+
+    </div>
+    
+    <div class="footer">Feito por: luix.</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Cole a configuração do seu Firebase AQUI
+        const firebaseConfig = {
+            apiKey: "AIzaSyCR9mVu8ifdJdSV5psQxgKv-tjERM7WJ2A",
+            authDomain: "jododamemoria.firebaseapp.com",
+            projectId: "jododamemoria",
+            storageBucket: "jododamemoria.firebasestorage.app",
+            messagingSenderId: "628882650020",
+            appId: "1:628882650020:web:d38af5fcf33a8894974731",
+            measurementId: "G-0M0351L542"
+        };
+        
+        // Inicializa o Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Variáveis Globais ---
+        let playerName = '';
+        let timerInterval;
+        let startTime;
+        let seconds = 0;
+        let isTimerRunning = false;
+        
+        const startPage = document.getElementById('start-page');
+        const gameContent = document.getElementById('game-content');
+        const rankingPage = document.getElementById('ranking-page');
+        const nicknameInput = document.getElementById('nicknameInput');
+        const startButton = document.getElementById('startButton');
+        const playerNicknameSpan = document.getElementById('playerNickname');
         const board = document.querySelector('.board');
+        const movesSpan = document.getElementById('moves');
+        const matchedPairsSpan = document.getElementById('matched-pairs');
+        const timerSpan = document.getElementById('timer');
+        const winnerModal = document.getElementById('winnerModal');
+        const finalMovesSpan = document.getElementById('finalMoves');
+        const finalTimeSpan = document.getElementById('finalTime');
+        const finalDateSpan = document.getElementById('finalDate');
+        const saveScoreButton = document.getElementById('saveScoreButton');
+        const restartButton = document.getElementById('restartButton');
+        const adminPage = document.getElementById('admin-page');
+        const showAllPlayersButton = document.getElementById('showAllPlayers');
+        const rebootButton = document.getElementById('rebootButton');
+        const adminDataDisplay = document.getElementById('admin-data-display');
+        const rankList = document.getElementById('rank-list');
+        
+        // A SENHA DO ADMIN AQUI. TROQUE POR UMA MAIS SEGURA!
+        const ADMIN_NICKNAME = "admin123";
+
+        let cards = [
+            'Cuscuz', 'Cuscuz',
+            'Bolo de Rolo', 'Bolo de Rolo',
+            'Canja', 'Canja',
+            'Pizza', 'Pizza',
+            'Pamonha', 'Pamonha',
+            'Canjica', 'Canjica',
+            'Salada', 'Salada',
+            'Pastel', 'Pastel',
+            'Cerveja', 'Cerveja',
+            'Vinho', 'Vinho',
+            'Chocolate-Quente', 'Chocolate-Quente',
+            'Frango Assado', 'Frango Assado'
+        ];
+        
         let hasFlippedCard = false;
         let lockBoard = false;
         let firstCard, secondCard;
+        let moves = 0;
+        let matchedPairs = 0;
+        let restartCount = 0;
 
-        let cards = [
-            'Cuscuz','Cuscuz',
-            'Bolo de Rolo','Bolo de Rolo',
-            'Pizza','Pizza',
-            'Pamonha','Pamonha'
-        ];
-
-        // Embaralha cartas
+        // --- Funções de Lógica do Jogo ---
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -89,10 +448,11 @@
         function createBoard() {
             shuffle(cards);
             board.innerHTML = '';
-            cards.forEach(value => {
+            cards.forEach(cardValue => {
                 const card = document.createElement('div');
                 card.classList.add('card');
-                card.dataset.value = value; // só guardo no dataset
+                // O valor é armazenado no `dataset` para ser acessado apenas via JS
+                card.dataset.value = cardValue;
                 card.innerHTML = `
                     <div class="card-face card-back">?</div>
                     <div class="card-face card-front"></div>
@@ -102,12 +462,36 @@
             });
         }
 
+        function startTimer() {
+            if (isTimerRunning) return;
+            isTimerRunning = true;
+            startTime = new Date().getTime();
+            timerInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const diff = now - startTime;
+                seconds = Math.floor(diff / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                timerSpan.textContent = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+        }
+
         function flipCard() {
             if (lockBoard) return;
             if (this === firstCard) return;
 
+            if (!isTimerRunning) {
+                startTimer();
+            }
+
+            // Exibe a palavra ao virar a carta
+            this.querySelector('.card-front').textContent = this.dataset.value;
             this.classList.add('is-flipped');
-            this.querySelector('.card-front').textContent = this.dataset.value; // só mostra quando vira
 
             if (!hasFlippedCard) {
                 hasFlippedCard = true;
@@ -116,6 +500,9 @@
             }
 
             secondCard = this;
+            moves++;
+            movesSpan.textContent = moves;
+
             checkForMatch();
         }
 
@@ -127,7 +514,16 @@
         function disableCards() {
             firstCard.removeEventListener('click', flipCard);
             secondCard.removeEventListener('click', flipCard);
+            
+            matchedPairs++;
+            matchedPairsSpan.textContent = matchedPairs;
+
             resetBoard();
+
+            if (matchedPairs === cards.length / 2) {
+                stopTimer();
+                showWinnerModal();
+            }
         }
 
         function unflipCards() {
@@ -135,8 +531,9 @@
             setTimeout(() => {
                 firstCard.classList.remove('is-flipped');
                 secondCard.classList.remove('is-flipped');
-                firstCard.querySelector('.card-front').textContent = "";
-                secondCard.querySelector('.card-front').textContent = "";
+                // Oculta as palavras ao desvirar as cartas
+                firstCard.querySelector('.card-front').textContent = '';
+                secondCard.querySelector('.card-front').textContent = '';
                 resetBoard();
             }, 1000);
         }
@@ -146,7 +543,145 @@
             [firstCard, secondCard] = [null, null];
         }
 
-        createBoard();
+        function showWinnerModal() {
+            finalMovesSpan.textContent = moves;
+            finalTimeSpan.textContent = timerSpan.textContent;
+            finalDateSpan.textContent = new Date().toLocaleString();
+            playerNicknameSpan.textContent = playerName;
+            winnerModal.style.display = 'flex';
+        }
+        
+        function restartGame() {
+            restartCount++;
+            stopTimer();
+            moves = 0;
+            matchedPairs = 0;
+            seconds = 0;
+            movesSpan.textContent = 0;
+            matchedPairsSpan.textContent = "0/12";
+            timerSpan.textContent = "00:00";
+            createBoard();
+        }
+
+        // --- Interação com o Banco de Dados (Firebase) ---
+        async function saveScore() {
+            try {
+                await addDoc(collection(db, "jogadores"), {
+                    nome: playerName,
+                    pontuacao: moves,
+                    tempo: seconds,
+                    data: new Date(),
+                    reinicios: restartCount
+                });
+                winnerModal.style.display = 'none';
+                gameContent.style.display = 'none';
+                rankingPage.style.display = 'flex';
+                loadScores();
+            } catch (e) {
+                console.error("Erro ao salvar a pontuação: ", e);
+                alert("Erro ao salvar a pontuação. Verifique a configuração do seu Firebase e as regras de segurança.");
+            }
+        }
+
+        async function loadScores() {
+            const pontuacoesRef = collection(db, "jogadores");
+            const q = query(pontuacoesRef, orderBy("tempo"));
+            const querySnapshot = await getDocs(q);
+            
+            rankList.innerHTML = '';
+            const scores = [];
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                scores.push(data);
+            });
+
+            // Ordena os dados e preenche o pódio
+            scores.sort((a, b) => a.tempo - b.tempo);
+            if (scores.length >= 1) {
+                document.getElementById('first-info').textContent = `${scores[0].nome} (${scores[0].tempo}s)`;
+            } else {
+                document.getElementById('first-info').textContent = "🥇";
+            }
+            if (scores.length >= 2) {
+                document.getElementById('second-info').textContent = `${scores[1].nome} (${scores[1].tempo}s)`;
+            } else {
+                document.getElementById('second-info').textContent = "🥈";
+            }
+            if (scores.length >= 3) {
+                document.getElementById('third-info').textContent = `${scores[2].nome} (${scores[2].tempo}s)`;
+            } else {
+                document.getElementById('third-info').textContent = "🥉";
+            }
+
+            // Preenche a lista completa
+            scores.forEach(data => {
+                const li = document.createElement('li');
+                const minutes = Math.floor(data.tempo / 60);
+                const remainingSeconds = data.tempo % 60;
+                const formattedTime = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+                li.textContent = `${data.nome} - ${formattedTime} (${data.pontuacao} movimentos)`;
+                rankList.appendChild(li);
+            });
+        }
+
+        // --- Funções de Admin ---
+        async function showAllPlayers() {
+            const playersRef = collection(db, "jogadores");
+            const querySnapshot = await getDocs(playersRef);
+            
+            adminDataDisplay.innerHTML = `<h3>Todos os Registros</h3>`;
+            const ul = document.createElement('ul');
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const li = document.createElement('li');
+                li.textContent = `Nick: ${data.nome}, Tempo: ${data.tempo}s, Reinicios: ${data.reinicios}, Data: ${data.data.toDate().toLocaleString()}`;
+                ul.appendChild(li);
+            });
+            adminDataDisplay.appendChild(ul);
+        }
+
+        async function rebootDatabase() {
+            if (!confirm("Você tem certeza que deseja APAGAR TODO o histórico de jogadores? Esta ação é irreversível!")) {
+                return;
+            }
+            const playersRef = collection(db, "jogadores");
+            const querySnapshot = await getDocs(playersRef);
+            await runTransaction(db, async (transaction) => {
+                querySnapshot.forEach((doc) => {
+                    transaction.delete(doc.ref);
+                });
+            });
+            alert("Histórico de jogadores apagado com sucesso!");
+            adminDataDisplay.innerHTML = "";
+        }
+
+        // --- Event Listeners ---
+        nicknameInput.addEventListener('input', () => {
+            startButton.disabled = nicknameInput.value.trim() === '';
+        });
+
+        startButton.addEventListener('click', () => {
+            playerName = nicknameInput.value.trim();
+            if (playerName.toLowerCase() === ADMIN_NICKNAME) {
+                startPage.style.display = 'none';
+                gameContent.style.display = 'none';
+                rankingPage.style.display = 'none';
+                adminPage.style.display = 'block';
+                showAllPlayers();
+            } else if (playerName) {
+                startPage.style.display = 'none';
+                gameContent.style.display = 'flex';
+                restartGame();
+            }
+        });
+
+        saveScoreButton.addEventListener('click', saveScore);
+        restartButton.addEventListener('click', () => {
+            restartGame();
+        });
+        showAllPlayersButton.addEventListener('click', showAllPlayers);
+        rebootButton.addEventListener('click', rebootDatabase);
+
     </script>
 </body>
 </html>
