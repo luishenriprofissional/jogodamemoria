@@ -712,7 +712,7 @@
         nicknameInput.addEventListener('input', () => {
             const nickname = nicknameInput.value.trim();
             startButton.disabled = nickname === '';
-            // Reseta a visibilidade ao digitar, para evitar bug de display
+            // Reseta a visibilidade ao digitar
             existingPlayerOptions.style.display = 'none';
             startButton.style.display = 'block';
         });
@@ -727,8 +727,9 @@
                 const history = await checkPlayerHistory(playerName);
                 if (history.length > 0) {
                     existingPlayerNameSpan.textContent = playerName;
-                    existingPlayerOptions.style.display = 'flex'; // Usado para alinhar botões
+                    existingPlayerOptions.style.display = 'block';
                     startButton.style.display = 'none';
+                    nicknameInput.style.display = 'none';
                 } else {
                     startPage.style.display = 'none';
                     gameContent.style.display = 'flex';
@@ -755,6 +756,7 @@
             startPage.style.display = 'flex';
             nicknameInput.value = '';
             startButton.style.display = 'block';
+            nicknameInput.style.display = 'block';
             existingPlayerOptions.style.display = 'none';
         });
 
