@@ -415,21 +415,13 @@
         // A SENHA DO ADMIN AQUI. TROQUE POR UMA MAIS SEGURA!
         const ADMIN_NICKNAME = "admin123";
 
+        // AQUI ESTÁ A MUDANÇA: as cartas terão um ID único
         const cardValues = [
-            'Cuscuz', 'Cuscuz',
-            'Bolo de Rolo', 'Bolo de Rolo',
-            'Canja', 'Canja',
-            'Pizza', 'Pizza',
-            'Pamonha', 'Pamonha',
-            'Canjica', 'Canjica',
-            'Salada', 'Salada',
-            'Pastel', 'Pastel',
-            'Cerveja', 'Cerveja',
-            'Vinho', 'Vinho',
-            'Chocolate-Quente', 'Chocolate-Quente',
-            'Frango Assado', 'Frango Assado'
+            'Cuscuz', 'Bolo de Rolo', 'Canja', 'Pizza', 'Pamonha', 'Canjica', 
+            'Salada', 'Pastel', 'Cerveja', 'Vinho', 'Chocolate-Quente', 'Frango Assado'
         ];
         
+        let gameCards = [];
         let hasFlippedCard = false;
         let lockBoard = false;
         let firstCard, secondCard;
@@ -446,18 +438,22 @@
         }
 
         function createBoard() {
-            shuffle(cardValues);
+            // Cria um array de objetos para gerenciar as cartas, cada um com um ID e um valor
+            gameCards = [...cardValues, ...cardValues].map((value, index) => ({ id: index, value }));
+            shuffle(gameCards);
+
             board.innerHTML = '';
-            cardValues.forEach(cardValue => {
-                const card = document.createElement('div');
-                card.classList.add('card');
-                card.dataset.value = cardValue;
-                card.innerHTML = `
+            gameCards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.classList.add('card');
+                // A única informação no DOM é o ID, que não tem significado para o jogador
+                cardElement.dataset.id = index;
+                cardElement.innerHTML = `
                     <div class="card-face card-back">?</div>
                     <div class="card-face card-front"></div>
                 `;
-                card.addEventListener('click', flipCard);
-                board.appendChild(card);
+                cardElement.addEventListener('click', flipCard);
+                board.appendChild(cardElement);
             });
         }
 
@@ -488,8 +484,11 @@
                 startTimer();
             }
 
-            // CORREÇÃO: Colocando o valor da carta na face da frente somente ao virá-la
-            this.querySelector('.card-front').textContent = this.dataset.value;
+            // Pega o valor da carta usando o ID do DOM para buscar na variável JavaScript segura
+            const cardId = this.dataset.id;
+            const cardValue = gameCards[cardId].value;
+
+            this.querySelector('.card-front').textContent = cardValue;
             this.classList.add('is-flipped');
 
             if (!hasFlippedCard) {
@@ -506,7 +505,8 @@
         }
 
         function checkForMatch() {
-            let isMatch = firstCard.dataset.value === secondCard.dataset.value;
+            // Compara os valores das cartas usando a variável JavaScript, não o DOM
+            const isMatch = gameCards[firstCard.dataset.id].value === gameCards[secondCard.dataset.id].value;
             isMatch ? disableCards() : unflipCards();
         }
 
@@ -519,7 +519,7 @@
 
             resetBoard();
 
-            if (matchedPairs === cardValues.length / 2) {
+            if (matchedPairs === cardValues.length) {
                 stopTimer();
                 showWinnerModal();
             }
@@ -531,7 +531,7 @@
                 firstCard.classList.remove('is-flipped');
                 secondCard.classList.remove('is-flipped');
                 
-                // CORREÇÃO: Limpando o conteúdo ao desvirar
+                // Limpa o conteúdo da face da frente ao desvirar
                 firstCard.querySelector('.card-front').textContent = '';
                 secondCard.querySelector('.card-front').textContent = '';
                 
