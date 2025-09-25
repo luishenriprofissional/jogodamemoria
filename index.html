@@ -256,6 +256,11 @@
             padding-left: 20px;
             list-style-position: inside;
         }
+        
+        #scoreboard li.best-score {
+            font-weight: bold;
+            color: #28a745;
+        }
 
         /* Painel Admin */
         #admin-page {
@@ -307,6 +312,36 @@
             justify-content: space-between;
             align-items: center;
         }
+
+        /* Novo painel de usuário cadastrado */
+        #user-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        
+        #user-panel .modal-content h3 {
+            margin-top: 0;
+        }
+        
+        #user-panel .modal-content button {
+            margin: 10px;
+        }
+        
+        #user-history-content {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 20px;
+            text-align: left;
+        }
+
     </style>
 </head>
 <body>
@@ -352,6 +387,17 @@
             </div>
         </div>
 
+        <div id="user-panel" class="modal">
+            <div class="modal-content">
+                <h3>Usuário cadastrado, o que você deseja?</h3>
+                <button id="consultHistoryButton">Consultar Histórico</button>
+                <button id="startNewGameButton">Iniciar um novo jogo</button>
+                <div id="user-history-content" style="display: none;">
+                    <h4>Histórico de <span id="history-nickname"></span></h4>
+                    <ul id="history-list"></ul>
+                </div>
+            </div>
+        </div>
         <div id="ranking-page">
             <h2>Ranking dos Melhores Tempos</h2>
             <div id="podium-container" class="podium-container">
@@ -382,7 +428,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, runTransaction, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // Cole a configuração do seu Firebase AQUI
         const firebaseConfig = {
@@ -428,6 +474,14 @@
         const adminDataDisplay = document.getElementById('admin-data-display');
         const rankList = document.getElementById('rank-list');
         
+        // Novos elementos para o painel do usuário
+        const userPanel = document.getElementById('user-panel');
+        const consultHistoryButton = document.getElementById('consultHistoryButton');
+        const startNewGameButton = document.getElementById('startNewGameButton');
+        const userHistoryContent = document.getElementById('user-history-content');
+        const historyNicknameSpan = document.getElementById('history-nickname');
+        const historyList = document.getElementById('history-list');
+
         // A SENHA DO ADMIN AQUI. TROQUE POR UMA MAIS SEGURA!
         const ADMIN_NICKNAME = "admin123";
 
@@ -640,7 +694,7 @@
                 rankList.appendChild(li);
             });
         }
-
+        
         // --- Funções de Admin ---
         async function showAllPlayers() {
             const playersRef = collection(db, "jogadores");
@@ -694,12 +748,8 @@
             adminDataDisplay.innerHTML = "";
         }
 
-        // --- Event Listeners ---
-        nicknameInput.addEventListener('input', () => {
-            startButton.disabled = nicknameInput.value.trim() === '';
-        });
-
-        startButton.addEventListener('click', () => {
+        // --- Novas Funções para Usuário Cadastrado ---
+        async function checkExistingUser() {
             playerName = nicknameInput.value.trim();
             if (playerName.toLowerCase() === ADMIN_NICKNAME) {
                 startPage.style.display = 'none';
@@ -707,19 +757,89 @@
                 rankingPage.style.display = 'none';
                 adminPage.style.display = 'block';
                 showAllPlayers();
-            } else if (playerName) {
+                return;
+            }
+            
+            const playersRef = collection(db, "jogadores");
+            const q = query(playersRef, where("nome", "==", playerName));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                // Usuário encontrado, exibe o painel de opções
+                startPage.style.display = 'none';
+                userPanel.style.display = 'flex';
+            } else {
+                // Usuário não encontrado, inicia o jogo
                 startPage.style.display = 'none';
                 gameContent.style.display = 'flex';
                 restartGame();
             }
+        }
+
+        async function showUserHistory() {
+            historyList.innerHTML = '';
+            historyNicknameSpan.textContent = playerName;
+            userHistoryContent.style.display = 'block';
+
+            const playersRef = collection(db, "jogadores");
+            const q = query(playersRef, where("nome", "==", playerName), orderBy("tempo"));
+            const querySnapshot = await getDocs(q);
+            
+            let bestTime = Infinity;
+            let bestTimeDocId = null;
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.tempo < bestTime) {
+                    bestTime = data.tempo;
+                    bestTimeDocId = doc.id;
+                }
+            });
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const li = document.createElement('li');
+                const minutes = Math.floor(data.tempo / 60);
+                const remainingSeconds = data.tempo % 60;
+                const formattedTime = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+                
+                let reloadsText = `Recarregou: ${data.reinicios ? data.reinicios : 0} vezes`;
+                let dateText = `Data: ${data.data.toDate().toLocaleString()}`;
+                
+                li.textContent = `Tempo: ${formattedTime} | Movimentos: ${data.pontuacao} | ${reloadsText} | ${dateText}`;
+                
+                if (doc.id === bestTimeDocId) {
+                    li.classList.add('best-score');
+                    li.textContent += " (Seu melhor tempo! 🏆)";
+                }
+                
+                historyList.appendChild(li);
+            });
+        }
+        
+        function hidePanelsAndStartGame() {
+            userPanel.style.display = 'none';
+            startPage.style.display = 'none';
+            gameContent.style.display = 'flex';
+            restartGame();
+        }
+
+        // --- Event Listeners ---
+        nicknameInput.addEventListener('input', () => {
+            startButton.disabled = nicknameInput.value.trim() === '';
         });
 
+        startButton.addEventListener('click', checkExistingUser);
         saveScoreButton.addEventListener('click', saveScore);
         restartButton.addEventListener('click', () => {
             restartGame();
         });
         showAllPlayersButton.addEventListener('click', showAllPlayers);
         rebootButton.addEventListener('click', rebootDatabase);
+
+        // Novos Event Listeners
+        consultHistoryButton.addEventListener('click', showUserHistory);
+        startNewGameButton.addEventListener('click', hidePanelsAndStartGame);
 
     </script>
 </body>
