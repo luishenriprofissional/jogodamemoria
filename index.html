@@ -451,10 +451,11 @@
             cards.forEach(cardValue => {
                 const card = document.createElement('div');
                 card.classList.add('card');
+                // O valor é armazenado no `dataset` para ser acessado apenas via JS
                 card.dataset.value = cardValue;
                 card.innerHTML = `
                     <div class="card-face card-back">?</div>
-                    <div class="card-face card-front">${cardValue}</div>
+                    <div class="card-face card-front"></div>
                 `;
                 card.addEventListener('click', flipCard);
                 board.appendChild(card);
@@ -488,6 +489,8 @@
                 startTimer();
             }
 
+            // Exibe a palavra ao virar a carta
+            this.querySelector('.card-front').textContent = this.dataset.value;
             this.classList.add('is-flipped');
 
             if (!hasFlippedCard) {
@@ -528,6 +531,9 @@
             setTimeout(() => {
                 firstCard.classList.remove('is-flipped');
                 secondCard.classList.remove('is-flipped');
+                // Oculta as palavras ao desvirar as cartas
+                firstCard.querySelector('.card-front').textContent = '';
+                secondCard.querySelector('.card-front').textContent = '';
                 resetBoard();
             }, 1000);
         }
@@ -546,14 +552,13 @@
         }
         
         function restartGame() {
-            // Reinicia a contagem de reinícios apenas no início de um novo jogo
-            restartCount = 0; 
+            restartCount++;
             stopTimer();
             moves = 0;
             matchedPairs = 0;
             seconds = 0;
             movesSpan.textContent = 0;
-            matchedPairsSpan.textContent = 0;
+            matchedPairsSpan.textContent = "0/12";
             timerSpan.textContent = "00:00";
             createBoard();
         }
@@ -574,7 +579,7 @@
                 loadScores();
             } catch (e) {
                 console.error("Erro ao salvar a pontuação: ", e);
-                alert("Erro ao salvar a pontuação.");
+                alert("Erro ao salvar a pontuação. Verifique a configuração do seu Firebase e as regras de segurança.");
             }
         }
 
@@ -662,7 +667,7 @@
                 gameContent.style.display = 'none';
                 rankingPage.style.display = 'none';
                 adminPage.style.display = 'block';
-                showAllPlayers(); // Carrega os dados do admin assim que ele faz login
+                showAllPlayers();
             } else if (playerName) {
                 startPage.style.display = 'none';
                 gameContent.style.display = 'flex';
@@ -671,7 +676,9 @@
         });
 
         saveScoreButton.addEventListener('click', saveScore);
-        restartButton.addEventListener('click', restartGame);
+        restartButton.addEventListener('click', () => {
+            restartGame();
+        });
         showAllPlayersButton.addEventListener('click', showAllPlayers);
         rebootButton.addEventListener('click', rebootDatabase);
 
