@@ -287,9 +287,25 @@
             cursor: pointer;
         }
 
-        #rebootButton {
+        #rebootButton, .removeUserButton {
             background-color: #dc3545;
             color: white;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        #admin-data-display ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #admin-data-display li {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     </style>
 </head>
@@ -417,7 +433,7 @@
 
         // AQUI ESTÁ A MUDANÇA: as cartas terão um ID único
         const cardValues = [
-            'Cuscuz', 'Bolo de Rolo', 'Canja', 'Pizza', 'Pamonha', 'Canjica', 
+            'Cuscuz', 'Bolo de Rolo', 'Canja', 'Pizza', 'Pamonha', 'Canjica',
             'Salada', 'Pastel', 'Cerveja', 'Vinho', 'Chocolate-Quente', 'Frango Assado'
         ];
         
@@ -635,10 +651,32 @@
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 const li = document.createElement('li');
-                li.textContent = `Nick: ${data.nome}, Tempo: ${data.tempo}s, Reinicios: ${data.reinicios}, Data: ${data.data.toDate().toLocaleString()}`;
+                li.innerHTML = `
+                    <span>Nick: ${data.nome}, Tempo: ${data.tempo}s, Reinicios: ${data.reinicios}, Data: ${data.data.toDate().toLocaleString()}</span>
+                    <button class="removeUserButton" data-id="${doc.id}">Remover</button>
+                `;
                 ul.appendChild(li);
             });
             adminDataDisplay.appendChild(ul);
+
+            // Adiciona evento de clique para os botões de remover
+            document.querySelectorAll('.removeUserButton').forEach(button => {
+                button.addEventListener('click', (e) => removeUser(e.target.dataset.id));
+            });
+        }
+        
+        async function removeUser(docId) {
+            if (!confirm("Tem certeza que deseja remover este usuário?")) {
+                return;
+            }
+            try {
+                await deleteDoc(doc(db, "jogadores", docId));
+                alert("Usuário removido com sucesso!");
+                showAllPlayers(); // Recarrega a lista para refletir a mudança
+            } catch (e) {
+                console.error("Erro ao remover usuário: ", e);
+                alert("Erro ao remover usuário. Tente novamente.");
+            }
         }
 
         async function rebootDatabase() {
