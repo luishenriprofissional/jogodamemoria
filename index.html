@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jogo da Memória</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/hYeqM19.png"> 
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -515,7 +516,7 @@
         const adminDataDisplay = document.getElementById('admin-data-display');
         const rankList = document.getElementById('rank-list');
         
-        // NOVO: Elementos de Busca Admin
+        // Elementos de Busca Admin
         const adminSearchInput = document.getElementById('adminSearchInput');
         const adminSearchButton = document.getElementById('adminSearchButton');
 
@@ -788,7 +789,7 @@
             displayAdminData(querySnapshot, "Todos os Registros");
         }
         
-        // NOVO: Função de Busca Admin
+        // Função de Busca Admin
         async function searchAdminPlayer() {
             const searchTerm = adminSearchInput.value.trim();
             if (!searchTerm) {
@@ -797,11 +798,9 @@
             }
 
             const playersRef = collection(db, "jogadores");
-            // Busca que inicia com o termo (usando startAt/endAt para simular um "like")
-            // Note: Para um "like" eficiente em tempo real, seria melhor usar uma solução como Algolia/Elasticsearch.
-            // Aqui buscamos a correspondência exata ou a que começa com o termo.
+            // Busca pela correspondência exata do nome
             const q = query(playersRef, 
-                where("nome", "==", searchTerm) // Busca exata. Mais seguro e mais rápido.
+                where("nome", "==", searchTerm)
             );
             
             const querySnapshot = await getDocs(q);
@@ -981,7 +980,7 @@
         showPodiumButton.addEventListener('click', showTop3Podium);
         rebootButton.addEventListener('click', rebootDatabase);
         
-        // NOVO: Evento para o botão de busca
+        // Evento para o botão de busca
         adminSearchButton.addEventListener('click', searchAdminPlayer);
         // Opcional: buscar ao pressionar Enter no campo de busca
         adminSearchInput.addEventListener('keydown', (e) => {
