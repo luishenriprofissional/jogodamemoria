@@ -432,7 +432,7 @@
                 <h3>Usuário cadastrado, o que você deseja?</h3>
                 <button id="consultHistoryButton">Consultar Histórico</button>
                 <button id="startNewGameButton">Iniciar um novo jogo</button>
-                <div id="user-history-content" style="display: none;">
+                <button id="viewPodiumButton">Ver Pódio</button> <div id="user-history-content" style="display: none;">
                     <h4>Histórico de <span id="history-nickname"></span></h4>
                     <ul id="history-list"></ul>
                 </div>
@@ -467,7 +467,6 @@
     <div class="footer">Feito por: luix.</div>
 
     <script type="module">
-        // IMPORTAÇÃO ATUALIZADA: Adicionado 'limit' para a função de pódio
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, runTransaction, where, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -524,6 +523,7 @@
         const userPanel = document.getElementById('user-panel');
         const consultHistoryButton = document.getElementById('consultHistoryButton');
         const startNewGameButton = document.getElementById('startNewGameButton');
+        const viewPodiumButton = document.getElementById('viewPodiumButton'); // NOVO ELEMENTO
         const userHistoryContent = document.getElementById('user-history-content');
         const historyNicknameSpan = document.getElementById('history-nickname');
         const historyList = document.getElementById('history-list');
@@ -680,7 +680,17 @@
             createBoard();
         }
 
-        // --- Interação com o Banco de Dados (Firebase) (Não Alteradas) ---
+        // --- Funções de Navegação de Tela ---
+        function navigateToRanking() {
+            userPanel.style.display = 'none';
+            gameContent.style.display = 'none';
+            rankingPage.style.display = 'flex';
+            adminPage.style.display = 'none';
+            // Garante que os scores sejam carregados
+            loadScores(); 
+        }
+
+        // --- Interação com o Banco de Dados (Firebase) ---
         async function saveScore() {
             try {
                 await addDoc(collection(db, "jogadores"), {
@@ -691,9 +701,7 @@
                     reinicios: restartCount
                 });
                 winnerModal.style.display = 'none';
-                gameContent.style.display = 'none';
-                rankingPage.style.display = 'flex';
-                loadScores();
+                navigateToRanking(); // Navega para o ranking após salvar
             } catch (e) {
                 console.error("Erro ao salvar a pontuação: ", e);
                 alert("Erro ao salvar a pontuação. Verifique a configuração do seu Firebase e as regras de segurança.");
@@ -744,7 +752,7 @@
             });
         }
         
-        // --- Funções de Admin ---
+        // --- Funções de Admin (Não Alteradas) ---
 
         /**
          * Função unificada para exibir dados no painel admin.
@@ -876,7 +884,7 @@
             adminDataDisplay.appendChild(ol);
         }
 
-        // --- Funções para Usuário Cadastrado (Não Alteradas) ---
+        // --- Funções para Usuário Cadastrado ---
         async function checkExistingUser() {
             playerName = nicknameInput.value.trim();
             if (playerName.toLowerCase() === ADMIN_NICKNAME) {
@@ -992,6 +1000,7 @@
         // Eventos do Painel do Usuário
         consultHistoryButton.addEventListener('click', showUserHistory);
         startNewGameButton.addEventListener('click', hidePanelsAndStartGame);
+        viewPodiumButton.addEventListener('click', navigateToRanking); // NOVO LISTENER
 
     </script>
 </body>
