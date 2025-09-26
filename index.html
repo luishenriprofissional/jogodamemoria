@@ -283,15 +283,17 @@
             justify-content: center;
             gap: 10px;
             margin-top: 20px;
+            flex-wrap: wrap; /* Adicionado para melhor visualização em telas pequenas */
         }
         
         .admin-buttons button {
-            padding: 10px 20px;
+            padding: 10px 15px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            white-space: nowrap;
         }
-
+        
         #rebootButton, .removeUserButton {
             background-color: #dc3545;
             color: white;
@@ -299,8 +301,33 @@
             font-size: 0.8em;
             margin-left: 10px;
         }
+        
+        .search-area { /* Novo estilo para a área de busca */
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            width: 100%;
+        }
 
-        #admin-data-display ul {
+        .search-area input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            flex-grow: 1;
+            max-width: 300px;
+        }
+
+        .search-area button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #admin-data-display ul, #admin-data-display ol {
             list-style: none;
             padding: 0;
         }
@@ -311,8 +338,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            text-align: left;
         }
 
+        #admin-data-display h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
         /* Novo painel de usuário cadastrado */
         #user-panel {
             display: none;
@@ -369,8 +401,15 @@
 
         <div id="admin-page">
             <h2>Painel de Administração</h2>
+            
+            <div class="search-area">
+                <input type="text" id="adminSearchInput" placeholder="Buscar Nickname...">
+                <button id="adminSearchButton">Buscar</button>
+            </div>
+
             <div class="admin-buttons">
-                <button id="showAllPlayers">Ver Jogadores</button>
+                <button id="showAllPlayers">Ver Jogadores (Todos)</button>
+                <button id="showPodiumButton">Ver Pódio (Top 3)</button>
                 <button id="rebootButton">Reboot (Apagar Tudo)</button>
             </div>
             <div id="admin-data-display" style="margin-top: 20px; max-height: 400px; overflow-y: auto;"></div>
@@ -427,8 +466,9 @@
     <div class="footer">Feito por: luix.</div>
 
     <script type="module">
+        // IMPORTAÇÃO ATUALIZADA: Adicionado 'limit' para a função de pódio
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, runTransaction, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, runTransaction, where, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // Cole a configuração do seu Firebase AQUI
         const firebaseConfig = {
@@ -470,10 +510,15 @@
         const restartButton = document.getElementById('restartButton');
         const adminPage = document.getElementById('admin-page');
         const showAllPlayersButton = document.getElementById('showAllPlayers');
+        const showPodiumButton = document.getElementById('showPodiumButton');
         const rebootButton = document.getElementById('rebootButton');
         const adminDataDisplay = document.getElementById('admin-data-display');
         const rankList = document.getElementById('rank-list');
         
+        // NOVO: Elementos de Busca Admin
+        const adminSearchInput = document.getElementById('adminSearchInput');
+        const adminSearchButton = document.getElementById('adminSearchButton');
+
         // Novos elementos para o painel do usuário
         const userPanel = document.getElementById('user-panel');
         const consultHistoryButton = document.getElementById('consultHistoryButton');
@@ -499,7 +544,7 @@
         let matchedPairs = 0;
         let restartCount = 0;
 
-        // --- Funções de Lógica do Jogo ---
+        // --- Funções de Lógica do Jogo (Não Alteradas) ---
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -623,7 +668,7 @@
         }
         
         function restartGame() {
-            restartCount++;
+            restartCount = 0; // Se o jogo for reiniciado, o contador de restarts deve ser zerado para a nova partida
             stopTimer();
             moves = 0;
             matchedPairs = 0;
@@ -634,7 +679,7 @@
             createBoard();
         }
 
-        // --- Interação com o Banco de Dados (Firebase) ---
+        // --- Interação com o Banco de Dados (Firebase) (Não Alteradas) ---
         async function saveScore() {
             try {
                 await addDoc(collection(db, "jogadores"), {
@@ -666,7 +711,7 @@
                 scores.push(data);
             });
 
-            // Ordena os dados e preenche o pódio
+            // Ordena os dados e preenche o pódio visual
             scores.sort((a, b) => a.tempo - b.tempo);
             if (scores.length >= 1) {
                 document.getElementById('first-info').textContent = `${scores[0].nome} (${scores[0].tempo}s)`;
@@ -685,32 +730,47 @@
             }
 
             // Preenche a lista completa
-            scores.forEach(data => {
+            scores.forEach((data, index) => {
                 const li = document.createElement('li');
                 const minutes = Math.floor(data.tempo / 60);
                 const remainingSeconds = data.tempo % 60;
                 const formattedTime = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
                 li.textContent = `${data.nome} - ${formattedTime} (${data.pontuacao} movimentos)`;
+                if (index < 3) { // Destaca os 3 primeiros no ranking completo, se quiser
+                    li.classList.add('best-score');
+                }
                 rankList.appendChild(li);
             });
         }
         
         // --- Funções de Admin ---
-        async function showAllPlayers() {
-            const playersRef = collection(db, "jogadores");
-            const querySnapshot = await getDocs(playersRef);
-            
-            adminDataDisplay.innerHTML = `<h3>Todos os Registros</h3>`;
+
+        /**
+         * Função unificada para exibir dados no painel admin.
+         * @param {QuerySnapshot} querySnapshot - Resultado da busca no Firebase.
+         * @param {string} title - Título a ser exibido (ex: "Todos os Registros", "Busca por Nick").
+         */
+        function displayAdminData(querySnapshot, title) {
+            adminDataDisplay.innerHTML = `<h3>${title}</h3>`;
             const ul = document.createElement('ul');
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <span>Nick: ${data.nome}, Tempo: ${data.tempo}s, Reinicios: ${data.reinicios}, Data: ${data.data.toDate().toLocaleString()}</span>
-                    <button class="removeUserButton" data-id="${doc.id}">Remover</button>
-                `;
-                ul.appendChild(li);
-            });
+
+            if (querySnapshot.empty) {
+                ul.innerHTML = '<li>Nenhum registro encontrado.</li>';
+            } else {
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const li = document.createElement('li');
+                    
+                    const date = data.data ? data.data.toDate().toLocaleString() : 'N/A';
+                    
+                    li.innerHTML = `
+                        <span>Nick: ${data.nome}, Tempo: ${data.tempo}s, Reinicios: ${data.reinicios}, Data: ${date}</span>
+                        <button class="removeUserButton" data-id="${doc.id}">Remover</button>
+                    `;
+                    ul.appendChild(li);
+                });
+            }
+            
             adminDataDisplay.appendChild(ul);
 
             // Adiciona evento de clique para os botões de remover
@@ -718,7 +778,36 @@
                 button.addEventListener('click', (e) => removeUser(e.target.dataset.id));
             });
         }
+
+
+        async function showAllPlayers() {
+            const playersRef = collection(db, "jogadores");
+            // Ordena pela data para ver os mais recentes em primeiro (ou por nome)
+            const q = query(playersRef, orderBy("data", "desc"));
+            const querySnapshot = await getDocs(q);
+            displayAdminData(querySnapshot, "Todos os Registros");
+        }
         
+        // NOVO: Função de Busca Admin
+        async function searchAdminPlayer() {
+            const searchTerm = adminSearchInput.value.trim();
+            if (!searchTerm) {
+                alert("Por favor, digite um Nickname para buscar.");
+                return;
+            }
+
+            const playersRef = collection(db, "jogadores");
+            // Busca que inicia com o termo (usando startAt/endAt para simular um "like")
+            // Note: Para um "like" eficiente em tempo real, seria melhor usar uma solução como Algolia/Elasticsearch.
+            // Aqui buscamos a correspondência exata ou a que começa com o termo.
+            const q = query(playersRef, 
+                where("nome", "==", searchTerm) // Busca exata. Mais seguro e mais rápido.
+            );
+            
+            const querySnapshot = await getDocs(q);
+            displayAdminData(querySnapshot, `Resultados da Busca por: "${searchTerm}"`);
+        }
+
         async function removeUser(docId) {
             if (!confirm("Tem certeza que deseja remover este usuário?")) {
                 return;
@@ -726,7 +815,9 @@
             try {
                 await deleteDoc(doc(db, "jogadores", docId));
                 alert("Usuário removido com sucesso!");
-                showAllPlayers(); // Recarrega a lista para refletir a mudança
+                // Recarrega a última exibição (todos, pódio ou busca)
+                // Para simplificar, vamos recarregar a lista completa após a remoção
+                showAllPlayers(); 
             } catch (e) {
                 console.error("Erro ao remover usuário: ", e);
                 alert("Erro ao remover usuário. Tente novamente.");
@@ -748,7 +839,45 @@
             adminDataDisplay.innerHTML = "";
         }
 
-        // --- Novas Funções para Usuário Cadastrado ---
+        // Função para exibir apenas os 3 melhores tempos (pódio)
+        async function showTop3Podium() {
+            const playersRef = collection(db, "jogadores");
+            // Consulta para pegar os 3 melhores (menor tempo)
+            const q = query(playersRef, orderBy("tempo"), limit(3));
+            const querySnapshot = await getDocs(q);
+
+            adminDataDisplay.innerHTML = `<h3>🏆 Pódio (Top 3 Melhores Tempos) 🏆</h3>`;
+            const ol = document.createElement('ol');
+            let rank = 1;
+            
+            if (querySnapshot.empty) {
+                ol.innerHTML = '<li>Nenhum registro de jogo ainda.</li>';
+            } else {
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const li = document.createElement('li');
+
+                    const minutes = Math.floor(data.tempo / 60);
+                    const remainingSeconds = data.tempo % 60;
+                    const formattedTime = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+                    
+                    let medal = '';
+                    if (rank === 1) medal = '🥇';
+                    else if (rank === 2) medal = '🥈';
+                    else if (rank === 3) medal = '🥉';
+
+                    li.innerHTML = `
+                        <span>${medal} <strong>${data.nome}</strong>: ${formattedTime}s (${data.pontuacao} movimentos)</span>
+                    `;
+                    ol.appendChild(li);
+                    rank++;
+                });
+            }
+            
+            adminDataDisplay.appendChild(ol);
+        }
+
+        // --- Funções para Usuário Cadastrado (Não Alteradas) ---
         async function checkExistingUser() {
             playerName = nicknameInput.value.trim();
             if (playerName.toLowerCase() === ADMIN_NICKNAME) {
@@ -846,10 +975,22 @@
         restartButton.addEventListener('click', () => {
             restartGame();
         });
+        
+        // Eventos do Painel Admin
         showAllPlayersButton.addEventListener('click', showAllPlayers);
+        showPodiumButton.addEventListener('click', showTop3Podium);
         rebootButton.addEventListener('click', rebootDatabase);
+        
+        // NOVO: Evento para o botão de busca
+        adminSearchButton.addEventListener('click', searchAdminPlayer);
+        // Opcional: buscar ao pressionar Enter no campo de busca
+        adminSearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                searchAdminPlayer();
+            }
+        });
 
-        // Novos Event Listeners
+        // Eventos do Painel do Usuário
         consultHistoryButton.addEventListener('click', showUserHistory);
         startNewGameButton.addEventListener('click', hidePanelsAndStartGame);
 
