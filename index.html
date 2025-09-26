@@ -303,6 +303,15 @@
             margin-left: 10px;
         }
         
+        /* Novo estilo para o botão de Restaurar */
+        .restoreUserButton {
+            background-color: #007bff; /* Azul */
+            color: white;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
         .search-area { /* Novo estilo para a área de busca */
             display: flex;
             justify-content: center;
@@ -411,7 +420,7 @@
             <div class="admin-buttons">
                 <button id="showAllPlayers">Ver Jogadores (Todos)</button>
                 <button id="showPodiumButton">Ver Pódio (Top 3)</button>
-                <button id="rebootButton">Reboot (Apagar Tudo)</button>
+                <button id="showDeletedPlayers">Ver Excluídos</button> <button id="rebootButton">Reboot (Apagar Tudo)</button>
             </div>
             <div id="admin-data-display" style="margin-top: 20px; max-height: 400px; overflow-y: auto;"></div>
         </div>
@@ -432,7 +441,8 @@
                 <h3>Usuário cadastrado, o que você deseja?</h3>
                 <button id="consultHistoryButton">Consultar Histórico</button>
                 <button id="startNewGameButton">Iniciar um novo jogo</button>
-                <button id="viewPodiumButton">Ver Pódio</button> <div id="user-history-content" style="display: none;">
+                <button id="viewPodiumButton">Ver Pódio</button>
+                <div id="user-history-content" style="display: none;">
                     <h4>Histórico de <span id="history-nickname"></span></h4>
                     <ul id="history-list"></ul>
                 </div>
@@ -467,8 +477,10 @@
     <div class="footer">Feito por: luix.</div>
 
     <script type="module">
+        // IMPORTAÇÃO ATUALIZADA: Adicionado 'limit' para a função de pódio
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, runTransaction, where, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        // Adicionado getDoc, setDoc para facilitar a movimentação entre coleções
+        import { getFirestore, collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, runTransaction, where, limit, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // Cole a configuração do seu Firebase AQUI
         const firebaseConfig = {
@@ -511,6 +523,7 @@
         const adminPage = document.getElementById('admin-page');
         const showAllPlayersButton = document.getElementById('showAllPlayers');
         const showPodiumButton = document.getElementById('showPodiumButton');
+        const showDeletedPlayersButton = document.getElementById('showDeletedPlayers'); // NOVO ELEMENTO
         const rebootButton = document.getElementById('rebootButton');
         const adminDataDisplay = document.getElementById('admin-data-display');
         const rankList = document.getElementById('rank-list');
@@ -523,7 +536,7 @@
         const userPanel = document.getElementById('user-panel');
         const consultHistoryButton = document.getElementById('consultHistoryButton');
         const startNewGameButton = document.getElementById('startNewGameButton');
-        const viewPodiumButton = document.getElementById('viewPodiumButton'); // NOVO ELEMENTO
+        const viewPodiumButton = document.getElementById('viewPodiumButton');
         const userHistoryContent = document.getElementById('user-history-content');
         const historyNicknameSpan = document.getElementById('history-nickname');
         const historyList = document.getElementById('history-list');
@@ -544,6 +557,7 @@
         let moves = 0;
         let matchedPairs = 0;
         let restartCount = 0;
+        let currentAdminView = 'players'; // 'players', 'deleted', 'search', 'podium'
 
         // --- Funções de Lógica do Jogo (Não Alteradas) ---
         function shuffle(array) {
@@ -683,6 +697,7 @@
         // --- Funções de Navegação de Tela ---
         function navigateToRanking() {
             userPanel.style.display = 'none';
+            startPage.style.display = 'none';
             gameContent.style.display = 'none';
             rankingPage.style.display = 'flex';
             adminPage.style.display = 'none';
@@ -690,7 +705,7 @@
             loadScores(); 
         }
 
-        // --- Interação com o Banco de Dados (Firebase) ---
+        // --- Interação com o Banco de Dados (Firebase) (Funções CRUD movendo dados) ---
         async function saveScore() {
             try {
                 await addDoc(collection(db, "jogadores"), {
@@ -752,14 +767,15 @@
             });
         }
         
-        // --- Funções de Admin (Não Alteradas) ---
+        // --- Funções de Admin (Com Múltiplos Botões de Ação) ---
 
         /**
          * Função unificada para exibir dados no painel admin.
          * @param {QuerySnapshot} querySnapshot - Resultado da busca no Firebase.
          * @param {string} title - Título a ser exibido (ex: "Todos os Registros", "Busca por Nick").
+         * @param {string} sourceCollection - Coleção de onde os dados vieram ('jogadores' ou 'excluidos').
          */
-        function displayAdminData(querySnapshot, title) {
+        function displayAdminData(querySnapshot, title, sourceCollection) {
             adminDataDisplay.innerHTML = `<h3>${title}</h3>`;
             const ul = document.createElement('ul');
 
@@ -770,35 +786,125 @@
                     const data = doc.data();
                     const li = document.createElement('li');
                     
-                    const date = data.data ? data.data.toDate().toLocaleString() : 'N/A';
+                    // Converte o timestamp do Firebase para objeto Date, se necessário
+                    const date = data.data && data.data.toDate ? data.data.toDate().toLocaleString() : 'N/A';
                     
+                    // Cria a estrutura de exibição
                     li.innerHTML = `
                         <span>Nick: ${data.nome}, Tempo: ${data.tempo}s, Reinicios: ${data.reinicios}, Data: ${date}</span>
-                        <button class="removeUserButton" data-id="${doc.id}">Remover</button>
                     `;
+                    
+                    // Adiciona o botão apropriado com base na coleção de origem
+                    if (sourceCollection === 'jogadores') {
+                        // Botão de EXCLUIR para a lista de jogadores
+                        const removeButton = document.createElement('button');
+                        removeButton.classList.add('removeUserButton');
+                        removeButton.textContent = 'Excluir';
+                        removeButton.dataset.id = doc.id;
+                        li.appendChild(removeButton);
+                        removeButton.addEventListener('click', (e) => removeUser(e.target.dataset.id));
+                    } else if (sourceCollection === 'excluidos') {
+                        // Botão de RESTAURAR para a lista de excluídos
+                        const restoreButton = document.createElement('button');
+                        restoreButton.classList.add('restoreUserButton');
+                        restoreButton.textContent = 'Restaurar';
+                        restoreButton.dataset.id = doc.id;
+                        li.appendChild(restoreButton);
+                        restoreButton.addEventListener('click', (e) => restoreUser(e.target.dataset.id));
+                    }
+                    
                     ul.appendChild(li);
                 });
             }
             
             adminDataDisplay.appendChild(ul);
-
-            // Adiciona evento de clique para os botões de remover
-            document.querySelectorAll('.removeUserButton').forEach(button => {
-                button.addEventListener('click', (e) => removeUser(e.target.dataset.id));
-            });
         }
 
 
         async function showAllPlayers() {
+            currentAdminView = 'players';
             const playersRef = collection(db, "jogadores");
             // Ordena pela data para ver os mais recentes em primeiro (ou por nome)
             const q = query(playersRef, orderBy("data", "desc"));
             const querySnapshot = await getDocs(q);
-            displayAdminData(querySnapshot, "Todos os Registros");
+            displayAdminData(querySnapshot, "Todos os Registros Ativos", 'jogadores');
+        }
+
+        // NOVO: Função para exibir jogadores excluídos
+        async function showDeletedPlayers() {
+            currentAdminView = 'deleted';
+            const deletedRef = collection(db, "excluidos");
+            const q = query(deletedRef, orderBy("data", "desc"));
+            const querySnapshot = await getDocs(q);
+            displayAdminData(querySnapshot, "Histórico de Registros Excluídos", 'excluidos');
+        }
+
+        // MODIFICADO: Função para MOVER (excluir de jogadores e salvar em excluidos)
+        async function removeUser(docId) {
+            if (!confirm("Tem certeza que deseja MOVER este registro para o histórico de excluídos?")) {
+                return;
+            }
+            try {
+                // 1. Pega o documento
+                const userDocRef = doc(db, "jogadores", docId);
+                const userDoc = await getDoc(userDocRef);
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    
+                    // 2. Adiciona o documento na coleção de excluídos, mantendo o ID
+                    await setDoc(doc(db, "excluidos", docId), userData);
+                    
+                    // 3. Deleta o documento da coleção de jogadores
+                    await deleteDoc(userDocRef);
+                    
+                    alert("Registro movido para o histórico de excluídos com sucesso!");
+                    // Recarrega a lista de jogadores ativos
+                    showAllPlayers(); 
+                } else {
+                    alert("Documento não encontrado na coleção de jogadores.");
+                }
+            } catch (e) {
+                console.error("Erro ao remover/mover usuário: ", e);
+                alert("Erro ao remover/mover usuário. Tente novamente.");
+            }
         }
         
+        // NOVO: Função para RESTAURAR (excluir de excluidos e salvar em jogadores)
+        async function restoreUser(docId) {
+            if (!confirm("Tem certeza que deseja RESTAURAR este registro para a lista de ativos?")) {
+                return;
+            }
+            try {
+                // 1. Pega o documento
+                const deletedDocRef = doc(db, "excluidos", docId);
+                const deletedDoc = await getDoc(deletedDocRef);
+                
+                if (deletedDoc.exists()) {
+                    const deletedData = deletedDoc.data();
+                    
+                    // 2. Adiciona o documento na coleção de jogadores, mantendo o ID
+                    await setDoc(doc(db, "jogadores", docId), deletedData);
+                    
+                    // 3. Deleta o documento da coleção de excluídos
+                    await deleteDoc(deletedDocRef);
+                    
+                    alert("Registro restaurado para a lista de ativos com sucesso!");
+                    // Recarrega a lista de excluídos
+                    showDeletedPlayers();
+                    loadScores(); // Recarrega o ranking para incluir o restaurado
+                } else {
+                    alert("Documento não encontrado na coleção de excluídos.");
+                }
+            } catch (e) {
+                console.error("Erro ao restaurar usuário: ", e);
+                alert("Erro ao restaurar usuário. Tente novamente.");
+            }
+        }
+
         // Função de Busca Admin
         async function searchAdminPlayer() {
+            currentAdminView = 'search';
             const searchTerm = adminSearchInput.value.trim();
             if (!searchTerm) {
                 alert("Por favor, digite um Nickname para buscar.");
@@ -812,42 +918,38 @@
             );
             
             const querySnapshot = await getDocs(q);
-            displayAdminData(querySnapshot, `Resultados da Busca por: "${searchTerm}"`);
-        }
-
-        async function removeUser(docId) {
-            if (!confirm("Tem certeza que deseja remover este usuário?")) {
-                return;
-            }
-            try {
-                await deleteDoc(doc(db, "jogadores", docId));
-                alert("Usuário removido com sucesso!");
-                // Recarrega a última exibição (todos, pódio ou busca)
-                // Para simplificar, vamos recarregar a lista completa após a remoção
-                showAllPlayers(); 
-            } catch (e) {
-                console.error("Erro ao remover usuário: ", e);
-                alert("Erro ao remover usuário. Tente novamente.");
-            }
+            displayAdminData(querySnapshot, `Resultados da Busca por: "${searchTerm}"`, 'jogadores');
         }
 
         async function rebootDatabase() {
-            if (!confirm("Você tem certeza que deseja APAGAR TODO o histórico de jogadores? Esta ação é irreversível!")) {
+            if (!confirm("Você tem certeza que deseja APAGAR TODO o histórico de jogadores e excluídos? Esta ação é irreversível!")) {
                 return;
             }
+            // Deleta jogadores ativos
             const playersRef = collection(db, "jogadores");
-            const querySnapshot = await getDocs(playersRef);
+            const playersSnapshot = await getDocs(playersRef);
             await runTransaction(db, async (transaction) => {
-                querySnapshot.forEach((doc) => {
+                playersSnapshot.forEach((doc) => {
                     transaction.delete(doc.ref);
                 });
             });
-            alert("Histórico de jogadores apagado com sucesso!");
+            
+            // Deleta jogadores excluídos
+            const deletedRef = collection(db, "excluidos");
+            const deletedSnapshot = await getDocs(deletedRef);
+            await runTransaction(db, async (transaction) => {
+                deletedSnapshot.forEach((doc) => {
+                    transaction.delete(doc.ref);
+                });
+            });
+
+            alert("Todo o histórico de jogadores e excluídos foi apagado com sucesso!");
             adminDataDisplay.innerHTML = "";
         }
 
         // Função para exibir apenas os 3 melhores tempos (pódio)
         async function showTop3Podium() {
+            currentAdminView = 'podium';
             const playersRef = collection(db, "jogadores");
             // Consulta para pegar os 3 melhores (menor tempo)
             const q = query(playersRef, orderBy("tempo"), limit(3));
@@ -986,6 +1088,7 @@
         // Eventos do Painel Admin
         showAllPlayersButton.addEventListener('click', showAllPlayers);
         showPodiumButton.addEventListener('click', showTop3Podium);
+        showDeletedPlayersButton.addEventListener('click', showDeletedPlayers); // NOVO LISTENER
         rebootButton.addEventListener('click', rebootDatabase);
         
         // Evento para o botão de busca
@@ -1000,7 +1103,7 @@
         // Eventos do Painel do Usuário
         consultHistoryButton.addEventListener('click', showUserHistory);
         startNewGameButton.addEventListener('click', hidePanelsAndStartGame);
-        viewPodiumButton.addEventListener('click', navigateToRanking); // NOVO LISTENER
+        viewPodiumButton.addEventListener('click', navigateToRanking);
 
     </script>
 </body>
